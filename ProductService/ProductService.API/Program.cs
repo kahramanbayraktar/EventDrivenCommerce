@@ -22,6 +22,10 @@ namespace ProductService.API
 
             var app = builder.Build();
 
+            using var scope = app.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ProductDbContext>();
+            ProductDbContext.SeedDatabase(context);
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
