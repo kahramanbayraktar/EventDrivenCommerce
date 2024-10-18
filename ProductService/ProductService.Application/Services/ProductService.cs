@@ -35,7 +35,7 @@ namespace ProductService.Application.Services
             }
             catch (Exception ex)
             {
-                return Result<ProductDTO>.FailureResult($"Failed returning product {id}.", ex);
+                return Result<ProductDTO>.FailureResult($"Failed returning product {id}.", SharedKernel.Enums.ErrorCode.UnexpectedError, ex);
             }
         }
     }
