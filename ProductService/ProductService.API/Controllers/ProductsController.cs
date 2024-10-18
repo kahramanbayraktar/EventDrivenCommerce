@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ProductService.API.Models;
+using ProductService.Application.DTOs;
 using ProductService.Application.Interfaces;
 
 namespace ProductService.API.Controllers
@@ -19,26 +21,28 @@ namespace ProductService.API.Controllers
         {
             var result = await _service.GetProductById(id);
 
+            var response = new ApiResponse<ProductDTO>
+            {
+                Data = result.Data,
+                Success = result.Success,
+                Message = result.Message,
+                TraceId = Guid.NewGuid().ToString()
+            };
+
             if (result.Success)
             {
-                return Ok(result.Data);
+                return Ok(response);
             }
             else
             {
-                switch (result.ErrorCode)
+                return result.ErrorCode switch
                 {
-                    case SharedKernel.Enums.ErrorCode.NotFound:
-                        return NotFound();
-                    case SharedKernel.Enums.ErrorCode.ValidationError:
-                        return BadRequest(result.Message);
-                    case SharedKernel.Enums.ErrorCode.Unauthorized:
-                        return Unauthorized(result.Message);
-                    case SharedKernel.Enums.ErrorCode.Conflict:
-                        return Conflict(result.Message);
-                    case SharedKernel.Enums.ErrorCode.UnexpectedError:
-                    default:
-                        return StatusCode(StatusCodes.Status500InternalServerError, result.Message);
-                }
+                    SharedKernel.Enums.ErrorCode.NotFound => NotFound(),
+                    SharedKernel.Enums.ErrorCode.ValidationError => BadRequest(result.Message),
+                    SharedKernel.Enums.ErrorCode.Unauthorized => Unauthorized(result.Message),
+                    SharedKernel.Enums.ErrorCode.Conflict => Conflict(result.Message),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, result.Message),
+                };
             }
         }
     }
