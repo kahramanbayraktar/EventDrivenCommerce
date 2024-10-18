@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using ProductService.Application.Interfaces;
+using ProductService.Application.Mappings;
+using ProductService.Domain.Repositories;
 using ProductService.Infrastructure.Data.Context;
+using ProductService.Infrastructure.Data.Repositories;
 
 namespace ProductService.API
 {
@@ -19,6 +23,11 @@ namespace ProductService.API
 
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<ProductDbContext>(options => options.UseSqlServer(connectionString));
+
+            builder.Services.AddScoped<IProductRepository, ProductRepository>();
+            builder.Services.AddScoped<IProductService, Application.Services.ProductService>();
+
+            builder.Services.AddAutoMapper(typeof(ProductMappingProfile).Assembly);
 
             var app = builder.Build();
 

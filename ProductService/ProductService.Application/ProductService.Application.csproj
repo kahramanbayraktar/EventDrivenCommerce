@@ -7,13 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Interfaces\" />
     <Folder Include="Behaviors\" />
     <Folder Include="Validators\" />
     <Folder Include="Queries\Handlers\" />
     <Folder Include="Queries\Models\" />
     <Folder Include="Commands\Handlers\" />
     <Folder Include="Commands\Models\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
+    <ProjectReference Include="..\ProductService.Domain\ProductService.Domain.csproj" />
   </ItemGroup>
 
 </Project>
