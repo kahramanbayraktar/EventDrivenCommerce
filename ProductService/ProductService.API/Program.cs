@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using ProductService.Infrastructure.Data.Context;
 
 namespace ProductService.API
 {
@@ -10,9 +12,13 @@ namespace ProductService.API
             // Add services to the container.
 
             builder.Services.AddControllers();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddDbContext<ProductDbContext>(options => options.UseSqlServer(connectionString));
 
             var app = builder.Build();
 
@@ -26,7 +32,6 @@ namespace ProductService.API
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
