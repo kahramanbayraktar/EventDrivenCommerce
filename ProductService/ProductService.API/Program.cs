@@ -4,6 +4,9 @@ using ProductService.Application.Mappings;
 using ProductService.Domain.Repositories;
 using ProductService.Infrastructure.Data.Context;
 using ProductService.Infrastructure.Data.Repositories;
+using ProductService.Infrastructure.Messaging;
+using ProductService.Infrastructure.Messaging.Publishers;
+using StackExchange.Redis;
 
 namespace ProductService.API
 {
@@ -24,8 +27,15 @@ namespace ProductService.API
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<ProductDbContext>(options => options.UseSqlServer(connectionString));
 
+            var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
+            var redisConnection = ConnectionMultiplexer.Connect(redisConnectionString!);
+            builder.Services.AddSingleton<IConnectionMultiplexer>(redisConnection);
+            builder.Services.AddSingleton<RedisEventSubscriber>();
+
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IProductService, Application.Services.ProductService>();
+
+            builder.Services.AddScoped<IEventPublisher, RedisEventPublisher>();
 
             builder.Services.AddAutoMapper(typeof(ProductMappingProfile).Assembly);
 
@@ -34,6 +44,14 @@ namespace ProductService.API
             using var scope = app.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ProductDbContext>();
             ProductDbContext.SeedDatabase(context);
+
+            // Subscribe to events after app startup
+            var subscriber = app.Services.GetRequiredService<RedisEventSubscriber>();
+            subscriber.Subscribe("product_created", message =>
+            {
+                // Handle ProductCreatedEvent
+                Console.WriteLine($"Received event: {message}");
+            });
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

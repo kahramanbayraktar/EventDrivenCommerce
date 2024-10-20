@@ -1,8 +1,8 @@
 ﻿namespace ProductService.Domain.Events
 {
-    public class ProductCreatedEvent
+    public class ProductUpdatedEvent
     {
         public Guid ProductId { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using ProductService.Application.DTOs;
 using ProductService.Application.Interfaces;
 using ProductService.Domain.Entities;
+using ProductService.Domain.Events;
 using ProductService.Domain.Repositories;
 using SharedKernel.Models;
 
@@ -11,11 +12,13 @@ namespace ProductService.Application.Services
     {
         private readonly IProductRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IEventPublisher _eventPublisher;
 
-        public ProductService(IProductRepository repository, IMapper mapper)
+        public ProductService(IProductRepository repository, IMapper mapper, IEventPublisher eventPublisher)
         {
             _repository = repository;
             _mapper = mapper;
+            _eventPublisher = eventPublisher;
         }
 
         public async Task<Result<ProductDTO>> GetProductById(Guid id)
@@ -48,6 +51,15 @@ namespace ProductService.Application.Services
 
                 var productAdded = await _repository.CreateAsync(product);
                 var productDtoAdded = _mapper.Map<ProductDTO>(productAdded);
+
+                // Publish ProductCreatedEvent
+                var productCreatedEvent = new ProductCreatedEvent
+                {
+                    ProductId = productAdded.Id,
+                    CreatedAt = productAdded.CreatedAt
+                };
+                await _eventPublisher.PublishAsync("product_created", productCreatedEvent);
+
                 return Result<ProductDTO>.SuccessResult(productDtoAdded);
             }
             catch (Exception ex)
@@ -71,6 +83,15 @@ namespace ProductService.Application.Services
 
                 var productUpdated = await _repository.UpdateAsync(product);
                 var productDtoUpdated = _mapper.Map<ProductDTO>(productUpdated);
+
+                // Publish ProductUpdatedEvent
+                var productUpdatedEvent = new ProductUpdatedEvent
+                {
+                    ProductId = productUpdated.Id,
+                    UpdatedAt = productUpdated.UpdatedAt
+                };
+                await _eventPublisher.PublishAsync("product_updated", productUpdatedEvent);
+
                 return Result<ProductDTO>.SuccessResult(productDtoUpdated);
             }
             catch (Exception ex)
