@@ -13,8 +13,8 @@ namespace ProductService.Infrastructure.Messaging
 
         public void Subscribe(string topic, Action<string> handleMessage)
         {
-            var subsciber = _redisConnection.GetSubscriber();
-            subsciber.Subscribe(topic, (channel, message) =>
+            var subscriber = _redisConnection.GetSubscriber();
+            subscriber.Subscribe(topic, (channel, message) =>
             {
                 handleMessage(message);
             });

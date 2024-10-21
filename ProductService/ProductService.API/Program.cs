@@ -49,7 +49,6 @@ namespace ProductService.API
             var subscriber = app.Services.GetRequiredService<RedisEventSubscriber>();
             subscriber.Subscribe("product_created", message =>
             {
-                // Handle ProductCreatedEvent
                 Console.WriteLine($"Received event: {message}");
             });
 
