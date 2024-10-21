@@ -28,7 +28,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\InventoryService.Application\InventoryService.Application.csproj" />
+    <ProjectReference Include="..\InventoryService.Domain\InventoryService.Domain.csproj" />
     <ProjectReference Include="..\InventoryService.Infrastructure\InventoryService.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

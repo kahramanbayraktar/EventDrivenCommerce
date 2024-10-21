@@ -1,6 +1,9 @@
-﻿namespace InventoryService.Domain.Repositories
+﻿using InventoryService.Domain.Entities;
+
+namespace InventoryService.Domain.Repositories
 {
-    internal interface IInventoryItemRepository
+    public interface IInventoryItemRepository
     {
+        Task<InventoryItem> CreateAsync(InventoryItem item);
     }
 }

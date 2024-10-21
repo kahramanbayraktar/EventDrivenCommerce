@@ -1,4 +1,8 @@
-﻿using InventoryService.Infrastructure.Data.Context;
+﻿using InventoryService.Application.Interfaces;
+using InventoryService.Application.Mappings;
+using InventoryService.Domain.Repositories;
+using InventoryService.Infrastructure.Data.Context;
+using InventoryService.Infrastructure.Data.Repositories;
 using InventoryService.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -12,27 +16,33 @@ namespace InventoryService.Worker
     {
         static void Main(string[] args)
         {
-            var builder = Host.CreateDefaultBuilder(args)
+            var host = Host.CreateDefaultBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
+                    var configuration = context.Configuration;
+
+                    var connectionString = configuration.GetConnectionString("DefaultConnection");
+                    services.AddDbContext<InventoryItemDbContext>(options =>
+                        options.UseSqlServer(connectionString));
+
                     // Redis connection
-                    var redisConnectionString = context.Configuration.GetConnectionString("RedisConnection");
+                    var redisConnectionString = configuration.GetConnectionString("RedisConnection");
                     var redisConnection = ConnectionMultiplexer.Connect(redisConnectionString);
                     services.AddSingleton<IConnectionMultiplexer>(redisConnection);
+
+                    services.AddScoped<IInventoryItemService, InventoryItemService>();
+                    services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();
 
                     // Add the Redis subscriber
                     services.AddSingleton<RedisEventSubscriber>();
 
-                    var connectionString = context.Configuration.GetConnectionString("DefaultConnection");
-                    services.AddDbContext<InventoryItemDbContext>(options =>
-                        options.UseSqlServer(connectionString));
-                });
-
-            var app = builder.Build();
+                    services.AddAutoMapper(typeof(InventoryItemMappingProfile).Assembly);
+                })
+                .Build();
 
             Console.WriteLine("Hello, World!");
 
-            using var scope = app.Services.CreateScope();
+            using var scope = host.Services.CreateScope();
             var subscriber = scope.ServiceProvider.GetRequiredService<RedisEventSubscriber>();
             // Subscribe to product creation channel
             subscriber.Subscribe("product_created");
