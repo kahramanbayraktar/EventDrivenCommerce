@@ -19,14 +19,22 @@ namespace InventoryService.Worker
             var host = Host.CreateDefaultBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
-                    var configuration = context.Configuration;
+                    var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
-                    var connectionString = configuration.GetConnectionString("DefaultConnection");
+                    var configBuilder = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                    .AddJsonFile($"appsettings.{env}.json", optional: false, reloadOnChange: true)
+                    .AddEnvironmentVariables(); // Allow environment variables to override configuration
+
+                    var config = configBuilder.Build();
+
+                    var connectionString = config.GetConnectionString("DefaultConnection");
                     services.AddDbContext<InventoryItemDbContext>(options =>
                         options.UseSqlServer(connectionString));
 
                     // Redis connection
-                    var redisConnectionString = configuration.GetConnectionString("RedisConnection");
+                    var redisConnectionString = config.GetConnectionString("RedisConnection");
                     var redisConnection = ConnectionMultiplexer.Connect(redisConnectionString);
                     services.AddSingleton<IConnectionMultiplexer>(redisConnection);
 
@@ -40,12 +48,11 @@ namespace InventoryService.Worker
                 })
                 .Build();
 
-            Console.WriteLine("Hello, World!");
-
             using var scope = host.Services.CreateScope();
             var subscriber = scope.ServiceProvider.GetRequiredService<RedisEventSubscriber>();
             // Subscribe to product creation channel
             subscriber.Subscribe("product_created");
+            subscriber.Subscribe("product_updated");
 
             Console.WriteLine("Inventory Service is subscribed to product creations");
             Console.ReadLine();
