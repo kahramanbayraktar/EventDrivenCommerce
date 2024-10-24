@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
-using InventoryService.Application.DTOs;
 using InventoryService.Domain.Entities;
 using InventoryService.Domain.Repositories;
+using ProductService.Domain.Events;
 using SharedKernel.Models;
+using System.Text.Json;
 
 namespace InventoryService.Application.Interfaces
 {
@@ -17,15 +18,38 @@ namespace InventoryService.Application.Interfaces
             _mapper = mapper;
         }
 
-        public async Task<Result<InventoryItemDTO>> CreateInventoryItem(InventoryItemDTO itemDTO)
+        public async Task<Result<bool>> UpdateInventory(string message)
         {
-            var item = _mapper.Map<InventoryItem>(itemDTO);
+            var productEvent = JsonSerializer.Deserialize<ProductCreatedEvent>(message);
 
-            var itemCreated = await _repository.CreateAsync(item);
+            if (productEvent != null)
+            {
+                var inventoryItem = await _repository.GetByProductIdAsync(productEvent.ProductId);
 
-            var itemCreatedDto = _mapper.Map<InventoryItemDTO>(itemCreated);
+                if (inventoryItem != null)
+                {
+                    inventoryItem.Quantity++;
+                    inventoryItem.LastUpdatedAt = DateTime.UtcNow;
 
-            return Result<InventoryItemDTO>.SuccessResult(itemCreatedDto);
+                    await _repository.UpdateAsync(inventoryItem);
+
+                    Console.WriteLine($"Updated inventory for ProductId: {productEvent.ProductId}.");
+                }
+                else
+                {
+                    inventoryItem = new InventoryItem
+                    {
+                        ProductId = productEvent.ProductId,
+                        Quantity = 0,
+                        LastUpdatedAt = DateTime.UtcNow
+                    };
+                    await _repository.CreateAsync(inventoryItem);
+
+                    Console.WriteLine($"Created new inventory item for ProductId: {productEvent.ProductId}.");
+                }
+            }
+
+            return Result<bool>.SuccessResult(true);
         }
     }
 }
