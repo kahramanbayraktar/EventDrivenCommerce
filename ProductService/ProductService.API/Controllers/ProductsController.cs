@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using ProductService.API.Models;
+using ProductService.Application.Commands.Models;
 using ProductService.Application.DTOs;
-using ProductService.Application.Interfaces;
+using ProductService.Application.Queries.Models;
 using SharedKernel.Enums;
 using SharedKernel.Models;
 
@@ -11,17 +13,17 @@ namespace ProductService.API.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly IProductService _service;
+        private readonly IMediator _mediator;
 
-        public ProductsController(IProductService service)
+        public ProductsController(IMediator mediator)
         {
-            _service = service;
+            _mediator = mediator;
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProduct(Guid id)
         {
-            var result = await _service.GetProductById(id);
+            var result = await _mediator.Send(new GetProductByIdQuery(id));
 
             if (result.Success)
             {
@@ -36,7 +38,7 @@ namespace ProductService.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] ProductDTO product)
         {
-            var result = await _service.CreateProduct(product);
+            var result = await _mediator.Send(new CreateProductCommand(product));
 
             if (result.Success)
             {
@@ -49,9 +51,9 @@ namespace ProductService.API.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] ProductDTO product)
+        public async Task<IActionResult> UpdateProduct([FromBody] ProductDTO product)
         {
-            var result = await _service.UpdateProduct(id, product);
+            var result = await _mediator.Send(new UpdateProductCommand(product));
 
             if (result.Success)
             {
@@ -66,7 +68,7 @@ namespace ProductService.API.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {
-            var result = await _service.DeleteProduct(id);
+            var result = await _mediator.Send(new DeleteProductCommand(id));
 
             if (result.Success)
             {

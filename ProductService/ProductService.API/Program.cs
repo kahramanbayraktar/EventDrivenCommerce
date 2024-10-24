@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ProductService.Application.Commands.Models;
 using ProductService.Application.Interfaces;
 using ProductService.Application.Mappings;
 using ProductService.Domain.Repositories;
@@ -33,11 +34,11 @@ namespace ProductService.API
             builder.Services.AddSingleton<RedisEventSubscriber>();
 
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
-            builder.Services.AddScoped<IProductService, Application.Services.ProductService>();
 
             builder.Services.AddScoped<IEventPublisher, RedisEventPublisher>();
 
             builder.Services.AddAutoMapper(typeof(ProductMappingProfile).Assembly);
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateProductCommand).Assembly));
 
             var app = builder.Build();
 
