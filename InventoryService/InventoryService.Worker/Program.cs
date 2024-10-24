@@ -52,7 +52,6 @@ namespace InventoryService.Worker
             var subscriber = scope.ServiceProvider.GetRequiredService<RedisEventSubscriber>();
             // Subscribe to product creation channel
             subscriber.Subscribe("product_created");
-            subscriber.Subscribe("product_updated");
 
             Console.WriteLine("Inventory Service is subscribed to product creations");
             Console.ReadLine();
