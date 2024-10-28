@@ -1,17 +1,23 @@
-﻿using InventoryService.Application.Interfaces;
+﻿using InventoryService.Application.Commands.Models;
+using InventoryService.Domain.Repositories;
+using MediatR;
+using ProductService.Domain.Events;
 using StackExchange.Redis;
+using System.Text.Json;
 
 namespace InventoryService.Infrastructure.Messaging
 {
     public class RedisEventSubscriber
     {
         private readonly IConnectionMultiplexer _connectionMultiplexer;
-        private readonly IInventoryItemService _inventoryItemService;
+        private readonly IInventoryItemRepository _inventoryItemRepository;
+        private readonly IMediator _mediator;
 
-        public RedisEventSubscriber(IConnectionMultiplexer connectionMultiplexer, IInventoryItemService inventoryItemService)
+        public RedisEventSubscriber(IConnectionMultiplexer connectionMultiplexer, IInventoryItemRepository inventoryItemRepository, IMediator mediator)
         {
             _connectionMultiplexer = connectionMultiplexer;
-            _inventoryItemService = inventoryItemService;
+            _inventoryItemRepository = inventoryItemRepository;
+            _mediator = mediator;
         }
 
         public void Subscribe(string channel)
@@ -25,12 +31,25 @@ namespace InventoryService.Infrastructure.Messaging
             });
         }
 
-        public void HandleProductEvent(string message)
+        public async void HandleProductEvent(string message)
         {
             Console.WriteLine($"Handling event: {message}");
-            // Implement inventory service logic here
 
-            _inventoryItemService.UpdateInventory(message);
+            var productEvent = JsonSerializer.Deserialize<ProductCreatedEvent>(message);
+
+            if (productEvent != null)
+            {
+                var existingItem = await _inventoryItemRepository.GetByProductIdAsync(productEvent.ProductId);
+
+                if (existingItem == null)
+                {
+                    await _mediator.Send(new CreateInventoryItemCommand(productEvent.ProductId));
+                }
+                else
+                {
+                    await _mediator.Send(new UpdateInventoryItemCommand(productEvent.ProductId));
+                }
+            }
         }
     }
 }

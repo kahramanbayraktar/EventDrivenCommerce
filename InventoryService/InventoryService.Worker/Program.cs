@@ -1,4 +1,4 @@
-﻿using InventoryService.Application.Interfaces;
+﻿using InventoryService.Application.Commands.Models;
 using InventoryService.Application.Mappings;
 using InventoryService.Domain.Repositories;
 using InventoryService.Infrastructure.Data.Context;
@@ -38,13 +38,13 @@ namespace InventoryService.Worker
                     var redisConnection = ConnectionMultiplexer.Connect(redisConnectionString);
                     services.AddSingleton<IConnectionMultiplexer>(redisConnection);
 
-                    services.AddScoped<IInventoryItemService, InventoryItemService>();
                     services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();
 
                     // Add the Redis subscriber
                     services.AddSingleton<RedisEventSubscriber>();
 
                     services.AddAutoMapper(typeof(InventoryItemMappingProfile).Assembly);
+                    services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInventoryItemCommand).Assembly));
                 })
                 .Build();
 
