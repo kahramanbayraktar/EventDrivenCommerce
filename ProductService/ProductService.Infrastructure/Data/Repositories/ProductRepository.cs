@@ -19,6 +19,11 @@ namespace ProductService.Infrastructure.Data.Repositories
             return await _context.Products.SingleOrDefaultAsync(x => x.Id == id);
         }
 
+        public async Task<IEnumerable<Product>> GetAsync()
+        {
+            return await _context.Products.ToListAsync();
+        }
+
         public async Task<Product> CreateAsync(Product product)
         {
             await _context.Products.AddAsync(product);

@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using ProductService.API.GraphQL.Mutations;
+using ProductService.API.GraphQL.Queries;
+using ProductService.API.GraphQL.Types;
 using ProductService.Application.Commands.Models;
 using ProductService.Application.Interfaces;
 using ProductService.Application.Mappings;
@@ -40,6 +43,14 @@ namespace ProductService.API
             builder.Services.AddAutoMapper(typeof(ProductMappingProfile).Assembly);
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateProductCommand).Assembly));
 
+            builder.Services
+                .AddGraphQLServer()
+                .AddQueryType<ProductQueries>()
+                .AddMutationType<ProductMutations>()
+                .AddType<ProductType>()
+                .AddFiltering()
+                .AddSorting();
+
             var app = builder.Build();
 
             using var scope = app.Services.CreateScope();
@@ -65,6 +76,8 @@ namespace ProductService.API
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.MapGraphQL("/api/products/graphql");
 
             app.Run();
         }

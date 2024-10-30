@@ -5,7 +5,6 @@ using ProductService.Application.Commands.Models;
 using ProductService.Application.DTOs;
 using ProductService.Application.Queries.Models;
 using SharedKernel.Enums;
-using SharedKernel.Models;
 
 namespace ProductService.API.Controllers
 {
@@ -80,7 +79,7 @@ namespace ProductService.API.Controllers
             }
         }
 
-        private IActionResult HandleError<T>(Result<T> result)
+        private IActionResult HandleError<T>(SharedKernel.Models.Result<T> result)
         {
             var response = new ApiResponse<T>
             {
