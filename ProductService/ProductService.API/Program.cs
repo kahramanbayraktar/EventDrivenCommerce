@@ -1,3 +1,5 @@
+using Elastic.Clients.Elasticsearch;
+using Elastic.Transport;
 using Microsoft.EntityFrameworkCore;
 using ProductService.API.GraphQL.Mutations;
 using ProductService.API.GraphQL.Queries;
@@ -50,6 +52,23 @@ namespace ProductService.API
                 .AddType<ProductType>()
                 .AddFiltering()
                 .AddSorting();
+
+            // ElasticSearch
+            var handler = new HttpClientHandler
+            {
+                //ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
+            var elasticUri = builder.Configuration["ElasticSearch:Uri"];
+            var httpClient = new HttpClient(handler)
+            {
+                BaseAddress = new Uri(elasticUri!)
+            };
+            var settings = new ElasticsearchClientSettings(httpClient.BaseAddress)
+                .DefaultIndex("products")
+                .Authentication(new BasicAuthentication("elastic", "Sor2-BAKtuQ1iWTMeMHa"));
+            //.EnableDebugMode();
+            var elasticClient = new ElasticsearchClient(settings);
+            builder.Services.AddSingleton(elasticClient);
 
             var app = builder.Build();
 
